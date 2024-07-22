@@ -38,7 +38,6 @@ const PasteText = () => {
       });
 
       const result = await response.json();
-      console.log(result);
       if (response.ok) {
         setSummarizedText(result.summary);
         setSentiments(result.sentiments);
@@ -164,7 +163,7 @@ const PasteText = () => {
       {requestPath && (
         <div className="mt-5 flex justify-center">
           <a
-            href={`http://localhost:8000/api/download-report?reportPath=${encodeURIComponent(requestPath)}`}
+            href={`https://ai-summarization-backend1.onrender.com/api/download-report?reportPath=${encodeURIComponent(requestPath)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="bg-azure-blue text-cotton-white px-6 py-3 rounded-md hover:bg-opacity-80 transition-all"
