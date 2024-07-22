@@ -40,7 +40,7 @@ const PasteText = () => {
       const result = await response.json();
       console.log(result);
       if (response.ok) {
-        setSummarizedText(result.summary);
+        setSummarizedText(result.summary.summary);
         setSentiments(result.sentiments);
         setClassifications(result.classifications);
         setParaphrase(result.paraphrase);
