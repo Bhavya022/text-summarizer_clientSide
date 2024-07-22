@@ -38,6 +38,7 @@ const PasteText = () => {
       });
 
       const result = await response.json();
+      console.log(result)
       if (response.ok) {
         setSummarizedText(result.summary);
         setSentiments(result.sentiments);
