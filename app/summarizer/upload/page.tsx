@@ -54,7 +54,7 @@ const Upload = () => {
           console.log(res);
           const data = res.data;
           setFileUrl(data.reportPath);
-          setSummary(data.summary);
+          setSummary(data.summary.summary);
           setSentiments(data.sentiments);
           setClassifications(data.classifications);
           setKeyword(data.keyword);
