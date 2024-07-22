@@ -28,7 +28,7 @@ const PasteText = () => {
     setLoading(true);
     try {
       const authToken = localStorage.getItem('authToken'); // Get token from localStorage
-      const response = await fetch("http://localhost:8000/api/summarize", {
+      const response = await fetch("https://ai-summarization-backend1.onrender.com/api/summarize", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
