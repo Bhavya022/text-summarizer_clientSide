@@ -30,7 +30,7 @@ const SummarizeApi = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:8000/api/summarize", // Update this URL if needed
+        "https://ai-summarization-backend1.onrender.com/api/summarize", // Update this URL if needed
         apiData,
         {
           headers: {
