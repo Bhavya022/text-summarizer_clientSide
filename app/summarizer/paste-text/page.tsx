@@ -2,74 +2,95 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { NavBar } from "@/app/components";
-import { Input } from "@/components/ui/input";
-import axios from "axios";
+import { useClientStore } from "@/store";
+import AnimatedText from "@/app/components/AnimatedText/AnimatedText";
+import Speaker from "@/app/ui/icons/Speaker";
+import { speak } from "@/app/utils/TextToSpeech";
 
-const Upload = () => {
-  const [fileUrl, setFileUrl] = useState<string | null>(null);
-  const [fileLoading, setFileLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [summary, setSummary] = useState<string | null>(null);
-  const [sentiments, setSentiments] = useState<{score: number, comparative: number, words: string, positive: string, negative: string} | null>(null);
+const PasteText = () => {
+  const { data, setData } = useClientStore();
+  const [summarizedText, setSummarizedText] = useState<string>("");
+  const [sentiments, setSentiments] = useState<string[]>([]);
   const [classifications, setClassifications] = useState<string[]>([]);
-  const [keyword, setKeyword] = useState<string[]>([]);
-  const [paraphrase, setParaphrase] = useState<string | null>(null);
-  const [reportPath, setReportPath] = useState<string | null>(null);
+  const [paraphrase, setParaphrase] = useState<string>("");
+  const [requestPath, setRequestPath] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [errorLength, setErrorLength] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [history, setHistory] = useState<Array<{ text: string; summary: string; date: Date }>>([]);
   const router = useRouter();
 
-  const file_icon =
-    "https://imgs.search.brave.com/PkNC4u9TBqgKPrkKztC8BMORU8gNafaa0E1jKCgBEYw/rs:fit:500:0:0/g:ce/aHR0cHM6Ly9jZG4u/aWNvbi1pY29ucy5j/b20vaWNvbnMyLzg4/Ni9QTkcvNTEyL2Zp/bGVfSW1hZ2VfZG93/bmxvYWRfaWNvbi1p/Y29ucy5jb21fNjg5/NDIucG5n";
+  // Fetch and display summarization history from localStorage
+  const fetchSummarizationHistory = () => {
+    const history = JSON.parse(localStorage.getItem("summarizationHistory") || "[]");
+    setHistory(history);
+  };
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      router.push('/login'); // Redirect to login page if not authenticated
+    fetchSummarizationHistory();
+  }, []);
+
+  const saveToHistory = (newEntry: { text: string; summary: string; date: Date }) => {
+    const history = JSON.parse(localStorage.getItem("summarizationHistory") || "[]");
+    history.push(newEntry);
+    localStorage.setItem("summarizationHistory", JSON.stringify(history));
+    fetchSummarizationHistory(); // Refresh history after saving
+  };
+
+  // Function to summarize and analyze text
+  const handleSummarize = async () => {
+    if (data.length < 250) {
+      setErrorLength(true);
+      return;
     }
-  }, [router]);
+    setErrorLength(false);
+    setLoading(true);
 
-  // Handle file upload
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const uploadedFile = event.target.files?.[0];
-    if (uploadedFile) {
-      setFileLoading(true);
-      const formData = new FormData();
-      formData.append("file", uploadedFile);
-
-      try {
-        const token = localStorage.getItem('authToken'); // Get the token for the request
-        const res = await axios.post(
-          `http://localhost:8000/api/upload`,
-          formData,
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'multipart/form-data',
-            },
-          }
-        );
-
-        if (res.status === 200) { 
-          console.log(res);
-          const data = res.data;
-          setFileUrl(data.reportPath);
-          setSummary(data.summary);
-          setSentiments(data.sentiments);
-          setClassifications(data.classifications);
-          setKeyword(data.keyword);
-          setParaphrase(data.paraphrase);
-          setReportPath(data.reportPath);
-          setErrorMessage(null);
-        } else {
-          setErrorMessage('Unexpected response from server.');
-        }
-      } catch (err) {
-        console.error('Error:', err);
-        setErrorMessage('Error uploading file. Please try again.');
-      } finally {
-        setFileLoading(false);
+    try {
+      const authToken = localStorage.getItem('authToken');
+      if (!authToken) {
+        router.push('/login'); // Redirect to login page if not authenticated
+        return;
       }
+
+      const response = await fetch("https://ai-summarization-backend1.onrender.com/api/summarize", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ text: data }),
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        setSummarizedText(result.summary || "");
+        setSentiments(result.sentiments || []);
+        setClassifications(result.classifications || []);
+        setParaphrase(result.paraphrase || "");
+        setRequestPath(result.requestpath || "");
+        setErrorMessage("");
+
+        // Save to history
+        const newEntry = { text: data, summary: result.summary, date: new Date() };
+        saveToHistory(newEntry);
+      } else {
+        setErrorMessage(result.error || "An error occurred");
+      }
+    } catch (error) {
+      setErrorMessage("An error occurred while summarizing the text.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSpeak = () => {
+    try {
+      speak(summarizedText);
+    } catch (error) {
+      console.error("Error in text-to-speech:", error);
+      setErrorMessage("Unable to perform text-to-speech.");
     }
   };
 
@@ -78,7 +99,8 @@ const Upload = () => {
       <section className="p-7 md:px-10 lg:px-14 bg-azure-blue md:bg-cotton-white">
         <NavBar />
       </section>
-      <section className="flex items-center justify-center gap-5 py-10">
+
+      <section className="flex items-center justify-center gap-5 pt-10 pb-5">
         <Link
           href="/summarizer"
           className="bg-azure-blue text-cotton-white px-4 py-3 rounded-md"
@@ -88,116 +110,128 @@ const Upload = () => {
         <Link href="/paraphraser">Paraphrase</Link>
       </section>
 
-      <section className="mx-auto bg-cotton-white w-[90%] md:w-[70%] h-auto pt-10">
-        <article className="w-full mx-auto flex flex-col justify-center gap-10 h-full">
-          {fileUrl && (
-            <div className="flex justify-center mb-5">
-              <Image
-                src={file_icon}
-                alt="File Icon"
-                width={50}
-                height={50}
-              />
-            </div>
-          )}
-          <Input
-            type="file"
-            onChange={handleFileChange}
-            accept=".pdf,.txt,.html,.doc,.docx"
-            className="border-azure-blue text-azure-blue"
-          />
-          {errorMessage && (
-            <p className="text-red-500 text-center mt-4">{errorMessage}</p>
-          )}
-          <button
-            onClick={() => document.querySelector('input[type="file"]')?.click()}
-            disabled={fileLoading}
-            className={`${
-              fileLoading ? "opacity-50" : ""
-            } bg-cotton-white md:bg-azure-blue text-azure-blue md:text-cotton-white hover:text-cotton-white md:hover:text-azure-blue px-6 py-3 rounded-md border border-azure-blue hover:bg-azure-blue md:hover:bg-transparent transition-all font-[550] mx-auto`}
+      {summarizedText && (
+        <div className="w-[90%] flex justify-end pb-5">
+          <span
+            onClick={handleSpeak}
+            className="bg-azure-blue rounded-full p-2 hover:cursor-pointer"
           >
-            {fileLoading ? "Uploading..." : "Upload File"}
-          </button>
+            <Speaker />
+          </span>
+        </div>
+      )}
 
-          {/* Display summary */}
-          {summary && (
-            <div className="mt-5">
-              <h3 className="text-xl font-bold mb-2">Summary:</h3>
-              <div className="p-4 border border-azure-blue rounded-md bg-gray-50">
-                <p>{summary}</p>
-              </div>
-            </div>
-          )}
+      <section className="flex flex-col md:flex-row justify-center h-80 gap-10">
+        <textarea
+          onChange={(e) => setData(e.target.value)}
+          name="paste-text"
+          id="paste-text"
+          cols={30}
+          rows={10}
+          placeholder="Paste text"
+          value={data} // Changed from defaultValue to value for controlled component
+          className="mx-auto md:mx-0 border-2 border-azure-blue border-dashed w-[90%] md:w-[40%] focus:outline-azure-blue p-2 rounded-md"
+        ></textarea>
 
-          {/* Display sentiments */}
-          {sentiments && (
-            <div className="mt-5">
-              <h3 className="text-xl font-bold mb-2">Sentiments:</h3>
-              <div className="p-4 border border-azure-blue rounded-md bg-gray-50">
-                <p>Score: {sentiments.score}</p>
-                <p>Comparative: {sentiments.comparative}</p>
-                <p>Words: {sentiments.words}</p>
-                <p>Positive: {sentiments.positive}</p>
-                <p>Negative: {sentiments.negative}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Display classifications */}
-          {classifications.length > 0 && (
-            <div className="mt-5">
-              <h3 className="text-xl font-bold mb-2">Classifications:</h3>
-              <div className="p-4 border border-azure-blue rounded-md bg-gray-50">
-                <ul className="list-disc pl-5">
-                  {classifications.map((classification, index) => (
-                    <li key={index}>{classification}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          )}
-
-          {/* Display keyword */}
-          {keyword.length > 0 && (
-            <div className="mt-5">
-              <h3 className="text-xl font-bold mb-2">Keyword:</h3>
-              <div className="p-4 border border-azure-blue rounded-md bg-gray-50">
-                <ul className="list-disc pl-5">
-                  {keyword.map((word, index) => (
-                    <li key={index}>{word}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          )}
-
-          {/* Display paraphrase */}
-          {paraphrase && (
-            <div className="mt-5">
-              <h3 className="text-xl font-bold mb-2">Paraphrase:</h3>
-              <div className="p-4 border border-azure-blue rounded-md bg-gray-50">
-                <p>{paraphrase}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Display download button */}
-          {reportPath && (
-            <div className="mt-5 flex justify-center">
-              <a
-                href={`http://localhost:8000/api/download-report?reportPath=${encodeURIComponent(reportPath)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-azure-blue text-cotton-white px-6 py-3 rounded-md hover:bg-opacity-80 transition-all"
-              >
-                Download Report
-              </a>
-            </div>
+        <article className="overflow-y-scroll mx-auto md:mx-0 bg-azure-blue text-cotton-white w-[90%] md:w-[40%] h-96 md:h-full rounded-md p-2">
+          {summarizedText ? (
+            <AnimatedText text={summarizedText} delay={100} />
+          ) : (
+            "Summarized text"
           )}
         </article>
       </section>
+
+      {errorLength && (
+        <p className="text-red-500 text-sm text-center my-2">
+          Text must be more than 250 characters!
+        </p>
+      )}
+
+      {errorMessage && (
+        <p className="text-red-500 text-sm text-center my-2">
+          {errorMessage}
+        </p>
+      )}
+
+      {sentiments.length > 0 && (
+        <section className="my-5">
+          <h3 className="text-xl font-bold mb-2">Sentiments</h3>
+          <ul className="list-disc pl-5">
+            {sentiments.map((sentiment, index) => (
+              <li key={index}>{sentiment}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {classifications.length > 0 && (
+        <section className="my-5">
+          <h3 className="text-xl font-bold mb-2">Classifications</h3>
+          <ul className="list-disc pl-5">
+            {classifications.map((classification, index) => (
+              <li key={index}>{classification}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {paraphrase && (
+        <section className="my-5">
+          <h3 className="text-xl font-bold mb-2">Paraphrase</h3>
+          <p>{paraphrase}</p>
+        </section>
+      )}
+
+      {requestPath && (
+        <section className="my-5">
+          <h3 className="text-xl font-bold mb-2">Request Path</h3>
+          <p>{requestPath}</p>
+        </section>
+      )}
+
+      {requestPath && (
+        <div className="mt-5 flex justify-center">
+          <a
+            href={`https://ai-summarization-backend1.onrender.com/api/download-report?reportPath=${encodeURIComponent(requestPath)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-azure-blue text-cotton-white px-6 py-3 rounded-md hover:bg-opacity-80 transition-all"
+          >
+            Download Report
+          </a>
+        </div>
+      )}
+
+      <section className="flex justify-center my-5">
+        <button
+          onClick={handleSummarize}
+          disabled={loading}
+          className={`${
+            loading ? "opacity-50" : ""
+          } bg-cotton-white md:bg-azure-blue text-azure-blue md:text-cotton-white hover:text-cotton-white md:hover:text-azure-blue px-6 py-3 rounded-md border border-azure-blue hover:bg-azure-blue md:hover:bg-transparent transition-all font-[550] mx-auto`}
+        >
+          {loading ? "Summarizing..." : "Summarize"}
+        </button>
+      </section>
+
+      {/* History section */}
+      {history.length > 0 && (
+        <section className="my-10">
+          <h3 className="text-2xl font-bold mb-5 text-center">Summarization History</h3>
+          <div className="w-[90%] mx-auto">
+            {history.map((entry, index) => (
+              <div key={index} className="border-b border-gray-300 py-3">
+                <p className="text-lg font-semibold">{entry.text}</p>
+                <p className="text-sm text-gray-600">{new Date(entry.date).toLocaleString()}</p>
+                <p className="text-md mt-2">{entry.summary}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 };
 
-export default Upload;
+export default PasteText;
