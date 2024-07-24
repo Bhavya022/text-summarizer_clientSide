@@ -14,7 +14,7 @@ const SummarizeApi = () => {
   const [errorMessage, setErrorMessage] = useState("");
 
   const apiData = {
-    text: data,
+    text: data || "", // Ensure data is not undefined
   };
 
   const summarizeText = async () => {
@@ -41,14 +41,14 @@ const SummarizeApi = () => {
 
       if (response.status === 200) {
         const result = response.data;
-        setSummarizedText(result.summary);
+        setSummarizedText(result.summary || ""); // Ensure result.summary is defined
         setSentiments(result.sentiments || []);
         setClassifications(result.classifications || []);
         setParaphrase(result.paraphrase || "");
-        setRequestPath(result.requestpath || "");
+        setRequestPath(result.requestpath || ""); // Ensure result.requestpath is defined
         setErrorMessage("");
       } else {
-        setErrorMessage(response.data.error || "An error occurred");
+        setErrorMessage(response.data.error || "An error occurred"); // Use a fallback error message
       }
     } catch (error) {
       console.error("Error making POST request:", error);
