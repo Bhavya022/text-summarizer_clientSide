@@ -5,7 +5,7 @@ import Button from "../ui/Button";
 import { links } from "../data/data";
 import Hamburger from "../ui/icons/Hamburger";
 import Cancel from "../ui/icons/Cancel";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 
 const NavBar = () => {
   const sidebarRef = useRef<HTMLElement | null>(null);
@@ -35,32 +35,32 @@ const NavBar = () => {
 
   // Check authentication
   useEffect(() => {
-    const authToken = localStorage.getItem('authToken');
-    const storedUsername = localStorage.getItem('username');
+    const authToken = localStorage.getItem("authToken");
+    const storedUsername = localStorage.getItem("username");
     setIsAuthenticated(!!authToken);
     setUsername(storedUsername);
   }, []);
 
   // Handle Logout
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('username');
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("username");
     setIsAuthenticated(false);
     setUsername(null);
-    router.push('/login');
+    router.push("/login");
   };
 
   // Handle keyboard events for sidebar
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         setSideBar(false);
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
 
@@ -141,7 +141,7 @@ const NavBar = () => {
               Contact Us
             </button>
           </Link>
-          
+
           {isAuthenticated ? (
             <>
               <span className="text-azure-blue">{username}</span>
