@@ -24,11 +24,11 @@ const Upload = () => {
     "https://imgs.search.brave.com/PkNC4u9TBqgKPrkKztC8BMORU8gNafaa0E1jKCgBEYw/rs:fit:500:0:0/g:ce/aHR0cHM6Ly9jZG4u/aWNvbi1pY29ucy5j/b20vaWNvbnMyLzg4/Ni9QTkcvNTEyL2Zp/bGVfSW1hZ2VfZG93/bmxvYWRfaWNvbi1p/Y29ucy5jb21fNjg5/NDIucG5n";
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem("authToken");
     if (!token) {
-      router.push('/login'); // Redirect to login page if not authenticated
+      router.push("/login"); // Redirect to login page if not authenticated
     }
-    const savedHistory = JSON.parse(localStorage.getItem('summaryHistory') || '[]');
+    const savedHistory = JSON.parse(localStorage.getItem("summaryHistory") || "[]");
     setHistory(savedHistory);
   }, [router]);
 
@@ -41,19 +41,19 @@ const Upload = () => {
       formData.append("file", uploadedFile);
 
       try {
-        const token = localStorage.getItem('authToken'); // Get the token for the request
+        const token = localStorage.getItem("authToken"); // Get the token for the request
         const res = await axios.post(
           `https://ai-summarization-backend1.onrender.com/api/upload`,
           formData,
           {
             headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'multipart/form-data',
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "multipart/form-data",
             },
           }
         );
 
-        if (res.status === 200) { 
+        if (res.status === 200) {
           const data = res.data;
           setFileUrl(data.reportPath);
           setSummary(data.summary);
@@ -73,17 +73,18 @@ const Upload = () => {
               classifications: data.classifications,
               keyword: data.keyword,
               paraphrase: data.paraphrase,
+              dateTime: new Date().toISOString(), // Save the current timestamp
               reportPath: data.reportPath,
             },
           ];
-          localStorage.setItem('summaryHistory', JSON.stringify(newHistory));
+          localStorage.setItem("summaryHistory", JSON.stringify(newHistory));
           setHistory(newHistory);
         } else {
-          setErrorMessage('Unexpected response from server.');
+          setErrorMessage("Unexpected response from server.");
         }
       } catch (err) {
-        console.error('Error uploading file:', err);
-        setErrorMessage('Error uploading file. Please try again.');
+        console.error("Error uploading file:", err);
+        setErrorMessage("Error uploading file. Please try again.");
       } finally {
         setFileLoading(false);
       }
@@ -96,25 +97,20 @@ const Upload = () => {
         <NavBar />
       </section>
       <section className="flex items-center justify-center gap-5 py-10">
-        <Link
-          href="/summarizer"
-          className="bg-azure-blue text-cotton-white px-4 py-3 rounded-md"
-        >
+        <Link href="/summarizer" className="bg-azure-blue text-cotton-white px-4 py-3 rounded-md">
           Summarize
         </Link>
         <Link href="/paraphraser">Paraphrase</Link>
+        <Link href="/history" className="bg-cotton-white text-azure-blue px-4 py-3 rounded-md border border-azure-blue">
+          Summary History
+        </Link>
       </section>
 
       <section className="mx-auto bg-cotton-white w-[90%] md:w-[70%] h-auto pt-10">
         <article className="w-full mx-auto flex flex-col justify-center gap-10 h-full">
           {fileUrl && (
             <div className="flex justify-center mb-5">
-              <Image
-                src={file_icon}
-                alt="File Icon"
-                width={50}
-                height={50}
-              />
+              <Image src={file_icon} alt="File Icon" width={50} height={50} />
             </div>
           )}
           <Input
@@ -123,9 +119,7 @@ const Upload = () => {
             accept=".pdf,.txt,.html,.doc,.docx"
             className="border-azure-blue text-azure-blue"
           />
-          {errorMessage && (
-            <p className="text-red-500 text-center mt-4">{errorMessage}</p>
-          )}
+          {errorMessage && <p className="text-red-500 text-center mt-4">{errorMessage}</p>}
           <button
             onClick={() => {
               const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement | null;
@@ -212,39 +206,6 @@ const Upload = () => {
               >
                 Download Report
               </a>
-            </div>
-          )}
-
-          {/* Display summary history */}
-          {history.length > 0 && (
-            <div className="mt-10">
-              <h3 className="text-xl font-bold mb-2">Summary History:</h3>
-              {history.map((item, index) => (
-                <div key={index} className="mb-4 p-4 border border-azure-blue rounded-md bg-gray-50">
-                  <h4 className="font-semibold mb-2">Summary:</h4>
-                  <p>{item.summary}</p>
-                  <h4 className="font-semibold mt-4 mb-2">Sentiments:</h4>
-                  <p>Score: {item.sentiments.score}</p>
-                  <p>Comparative: {item.sentiments.comparative}</p>
-                  <p>Words: {item.sentiments.words}</p>
-                  <p>Positive: {item.sentiments.positive}</p>
-                  <p>Negative: {item.sentiments.negative}</p>
-                  <h4 className="font-semibold mt-4 mb-2">Classifications:</h4>
-                  <ul className="list-disc pl-5">
-                    {item.classifications.map((classification, i) => (
-                      <li key={i}>{classification}</li>
-                    ))}
-                  </ul>
-                  <h4 className="font-semibold mt-4 mb-2">Keywords:</h4>
-                  <ul className="list-disc pl-5">
-                    {item.keyword.map((keyword, i) => (
-                      <li key={i}>{keyword}</li>
-                    ))}
-                  </ul>
-                  <h4 className="font-semibold mt-4 mb-2">Paraphrase:</h4>
-                  <p>{item.paraphrase}</p>
-                </div>
-              ))}
             </div>
           )}
         </article>
