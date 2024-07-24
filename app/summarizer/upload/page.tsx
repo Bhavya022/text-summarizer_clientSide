@@ -12,11 +12,12 @@ const Upload = () => {
   const [fileLoading, setFileLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
-  const [sentiments, setSentiments] = useState<{score: number, comparative: number, words: string, positive: string, negative: string} | null>(null);
+  const [sentiments, setSentiments] = useState<any>(null);
   const [classifications, setClassifications] = useState<string[]>([]);
   const [keyword, setKeyword] = useState<string[]>([]);
   const [paraphrase, setParaphrase] = useState<string | null>(null);
   const [reportPath, setReportPath] = useState<string | null>(null);
+  const [history, setHistory] = useState<any[]>([]);
   const router = useRouter();
 
   const file_icon =
@@ -27,6 +28,8 @@ const Upload = () => {
     if (!token) {
       router.push('/login'); // Redirect to login page if not authenticated
     }
+    const savedHistory = JSON.parse(localStorage.getItem('summaryHistory') || '[]');
+    setHistory(savedHistory);
   }, [router]);
 
   // Handle file upload
@@ -60,6 +63,21 @@ const Upload = () => {
           setParaphrase(data.paraphrase);
           setReportPath(data.reportPath);
           setErrorMessage(null);
+
+          // Save summary history to localStorage
+          const newHistory = [
+            ...history,
+            {
+              summary: data.summary,
+              sentiments: data.sentiments,
+              classifications: data.classifications,
+              keyword: data.keyword,
+              paraphrase: data.paraphrase,
+              reportPath: data.reportPath,
+            },
+          ];
+          localStorage.setItem('summaryHistory', JSON.stringify(newHistory));
+          setHistory(newHistory);
         } else {
           setErrorMessage('Unexpected response from server.');
         }
@@ -194,6 +212,39 @@ const Upload = () => {
               >
                 Download Report
               </a>
+            </div>
+          )}
+
+          {/* Display summary history */}
+          {history.length > 0 && (
+            <div className="mt-10">
+              <h3 className="text-xl font-bold mb-2">Summary History:</h3>
+              {history.map((item, index) => (
+                <div key={index} className="mb-4 p-4 border border-azure-blue rounded-md bg-gray-50">
+                  <h4 className="font-semibold mb-2">Summary:</h4>
+                  <p>{item.summary}</p>
+                  <h4 className="font-semibold mt-4 mb-2">Sentiments:</h4>
+                  <p>Score: {item.sentiments.score}</p>
+                  <p>Comparative: {item.sentiments.comparative}</p>
+                  <p>Words: {item.sentiments.words}</p>
+                  <p>Positive: {item.sentiments.positive}</p>
+                  <p>Negative: {item.sentiments.negative}</p>
+                  <h4 className="font-semibold mt-4 mb-2">Classifications:</h4>
+                  <ul className="list-disc pl-5">
+                    {item.classifications.map((classification, i) => (
+                      <li key={i}>{classification}</li>
+                    ))}
+                  </ul>
+                  <h4 className="font-semibold mt-4 mb-2">Keywords:</h4>
+                  <ul className="list-disc pl-5">
+                    {item.keyword.map((keyword, i) => (
+                      <li key={i}>{keyword}</li>
+                    ))}
+                  </ul>
+                  <h4 className="font-semibold mt-4 mb-2">Paraphrase:</h4>
+                  <p>{item.paraphrase}</p>
+                </div>
+              ))}
             </div>
           )}
         </article>
