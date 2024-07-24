@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { NavBar } from "@/app/components";
 import { useClientStore } from "@/store";
@@ -17,6 +17,24 @@ const PasteText = () => {
   const [loading, setLoading] = useState(false);
   const [errorLength, setErrorLength] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [history, setHistory] = useState([]);
+
+  // Fetch and display summarization history from localStorage
+  const fetchSummarizationHistory = () => {
+    const history = JSON.parse(localStorage.getItem("summarizationHistory")) || [];
+    setHistory(history);
+  };
+
+  useEffect(() => {
+    fetchSummarizationHistory();
+  }, []);
+
+  const saveToHistory = (newEntry) => {
+    const history = JSON.parse(localStorage.getItem("summarizationHistory")) || [];
+    history.push(newEntry);
+    localStorage.setItem("summarizationHistory", JSON.stringify(history));
+    fetchSummarizationHistory(); // Refresh history after saving
+  };
 
   // Function to summarize and analyze text
   const handleSummarize = async () => {
@@ -46,6 +64,10 @@ const PasteText = () => {
         setParaphrase(result.paraphrase || "");
         setRequestPath(result.requestpath || "");
         setErrorMessage("");
+
+        // Save to history
+        const newEntry = { text: data, summary: result.summary, date: new Date() };
+        saveToHistory(newEntry);
       } else {
         setErrorMessage(result.error || "An error occurred");
       }
@@ -186,6 +208,22 @@ const PasteText = () => {
           {loading ? "Summarizing..." : "Summarize"}
         </button>
       </section>
+
+      {/* History section */}
+      {history.length > 0 && (
+        <section className="my-10">
+          <h3 className="text-2xl font-bold mb-5 text-center">Summarization History</h3>
+          <div className="w-[90%] mx-auto">
+            {history.map((entry, index) => (
+              <div key={index} className="border-b border-gray-300 py-3">
+                <p className="text-lg font-semibold">{entry.text}</p>
+                <p className="text-sm text-gray-600">{new Date(entry.date).toLocaleString()}</p>
+                <p className="text-md mt-2">{entry.summary}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 };
