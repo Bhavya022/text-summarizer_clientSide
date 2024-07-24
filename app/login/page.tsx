@@ -21,15 +21,17 @@ const Login = () => {
         email,
         password
       });
-      const { token, username } = response.data;
-
-      // Console log the token and username
+      console.log(response)
+      const  token  = response.data.accessToken;
+      const username = response.data.user.username;
+      
+     
       console.log('Token:', token);
       console.log('Username:', username);
 
       localStorage.setItem('authToken', token);
-      localStorage.setItem('username', username);  // Store the username
-      router.push('/summarizer');  // Redirect to homepage or another page
+      localStorage.setItem('username', username);  
+      router.push('/summarizer');  
     } catch (err) {
       console.error('Login error:', err);
       setError('Invalid email or password.');

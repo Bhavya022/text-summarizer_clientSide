@@ -12,20 +12,24 @@ const ParaphraseApi = () => {
 
   const paraphraseText = () => {
     setParaphraseLoading(true);
+    const token = localStorage.getItem("authToken"); // Retrieve the token from localStorage
+
     const headers = {
       "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`, // Include the token in the Authorization header
     };
 
     // Make the POST request
     axios
       .post(
         "https://ai-summarization-backend1.onrender.com/api/paraphrase",
-        JSON.stringify(apiData),
+        apiData, // No need to stringify apiData as axios handles it automatically
         { headers }
       )
       .then((response) => {
         // Handle the response
-        setParaphrasedText(response.data.generate.generations[0].text);
+        console.log(response.data.paraphrase)
+        setParaphrasedText(response.data.paraphrase);
         setParaphraseLoading(false);
       })
       .catch((error) => {
@@ -34,6 +38,7 @@ const ParaphraseApi = () => {
         setParaphraseLoading(false);
       });
   };
+
   return {
     paraphraseText,
     paraphrasedText,

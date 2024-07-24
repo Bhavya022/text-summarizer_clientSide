@@ -30,7 +30,7 @@ const Paraphraser = () => {
         <NavBar />
       </section>
       <section className="flex items-center justify-center gap-5 py-10">
-        <Link href="/summarizer">Summarize And Analyze </Link>
+        <Link href="/summarizer">Summary</Link>
         <Link
           href="/paraphraser"
           className="bg-azure-blue text-cotton-white px-4 py-3 rounded-md"

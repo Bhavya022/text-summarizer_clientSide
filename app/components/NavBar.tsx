@@ -11,6 +11,7 @@ const NavBar = () => {
   const sidebarRef = useRef<HTMLElement | null>(null);
   const [sideBar, setSideBar] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [username, setUsername] = useState<string | null>(null);
   const router = useRouter();
 
   // Hide sidebar when clicking outside of the sidebar
@@ -35,7 +36,9 @@ const NavBar = () => {
   // Check authentication
   useEffect(() => {
     const authToken = localStorage.getItem('authToken');
+    const storedUsername = localStorage.getItem('username');
     setIsAuthenticated(!!authToken);
+    setUsername(storedUsername);
   }, []);
 
   // Handle Logout
@@ -43,6 +46,7 @@ const NavBar = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('username');
     setIsAuthenticated(false);
+    setUsername(null);
     router.push('/login');
   };
 
@@ -76,9 +80,12 @@ const NavBar = () => {
           </Link>
         ))}
         {isAuthenticated ? (
-          <button onClick={handleLogout} className="hover:underline">
-            Logout
-          </button>
+          <>
+            <span className="mr-2">{username}</span>
+            <button onClick={handleLogout} className="hover:underline">
+              Logout
+            </button>
+          </>
         ) : (
           <>
             <Link href="/login" className="hover:underline">Login</Link>
@@ -136,9 +143,12 @@ const NavBar = () => {
           </Link>
           
           {isAuthenticated ? (
-            <button onClick={handleLogout} className="text-azure-blue hover:underline">
-              Logout
-            </button>
+            <>
+              <span className="text-azure-blue">{username}</span>
+              <button onClick={handleLogout} className="text-azure-blue hover:underline">
+                Logout
+              </button>
+            </>
           ) : (
             <>
               <Link onClick={() => setSideBar(false)} href="/login" className="text-azure-blue hover:underline">Login</Link>
