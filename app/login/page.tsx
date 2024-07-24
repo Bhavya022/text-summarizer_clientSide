@@ -22,6 +22,11 @@ const Login = () => {
         password
       });
       const { token, username } = response.data;
+
+      // Console log the token and username
+      console.log('Token:', token);
+      console.log('Username:', username);
+
       localStorage.setItem('authToken', token);
       localStorage.setItem('username', username);  // Store the username
       router.push('/summarizer');  // Redirect to homepage or another page
