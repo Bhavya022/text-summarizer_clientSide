@@ -20,6 +20,7 @@ interface HistoryItem {
 
 const History = () => {
   const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -31,6 +32,10 @@ const History = () => {
       setHistory(savedHistory);
     }
   }, [router]);
+
+  const handleToggleDetails = (index: number) => {
+    setExpandedIndex(expandedIndex === index ? null : index);
+  };
 
   return (
     <main>
@@ -48,6 +53,46 @@ const History = () => {
                   <p>{new Date(item.dateTime).toLocaleString()}</p> {/* Format the date and time */}
                   <h4 className="font-semibold mt-4 mb-2">Summary:</h4>
                   <p>{item.summary}</p>
+                  {expandedIndex === index && (
+                    <div className="mt-4">
+                      <h4 className="font-semibold mb-2">Sentiments:</h4>
+                      <ul className="list-disc pl-5">
+                        <li>Score: {item.sentiments.score}</li>
+                        <li>Comparative: {item.sentiments.comparative}</li>
+                        <li>Words: {item.sentiments.words}</li>
+                        <li>Positive: {item.sentiments.positive}</li>
+                        <li>Negative: {item.sentiments.negative}</li>
+                      </ul>
+                      <h4 className="font-semibold mt-4 mb-2">Classifications:</h4>
+                      <ul className="list-disc pl-5">
+                        {item.classifications.map((classification, idx) => (
+                          <li key={idx}>{classification}</li>
+                        ))}
+                      </ul>
+                      <h4 className="font-semibold mt-4 mb-2">Keywords:</h4>
+                      <ul className="list-disc pl-5">
+                        {item.keyword.map((keyword, idx) => (
+                          <li key={idx}>{keyword}</li>
+                        ))}
+                      </ul>
+                      <h4 className="font-semibold mt-4 mb-2">Paraphrase:</h4>
+                      <p>{item.paraphrase}</p>
+                      <button
+                        onClick={() => handleToggleDetails(index)}
+                        className="mt-4 px-4 py-2 bg-azure-blue text-cotton-white rounded-md hover:bg-opacity-80 transition-all"
+                      >
+                        Back
+                      </button>
+                    </div>
+                  )}
+                  {expandedIndex !== index && (
+                    <button
+                      onClick={() => handleToggleDetails(index)}
+                      className="mt-4 px-4 py-2 bg-azure-blue text-cotton-white rounded-md hover:bg-opacity-80 transition-all"
+                    >
+                      Show More
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
