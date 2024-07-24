@@ -38,17 +38,18 @@ const SummarizeApi = () => {
           },
         }
       );
-
+      console.log(response)
       if (response.status === 200) {
         const result = response.data;
-        setSummarizedText(result.summary || ""); // Ensure result.summary is defined
+        console.log(response)
+        setSummarizedText(result.summary || ""); 
         setSentiments(result.sentiments || []);
         setClassifications(result.classifications || []);
         setParaphrase(result.paraphrase || "");
-        setRequestPath(result.requestpath || ""); // Ensure result.requestpath is defined
+        setRequestPath(result.requestpath || ""); 
         setErrorMessage("");
       } else {
-        setErrorMessage(response.data.error || "An error occurred"); // Use a fallback error message
+        setErrorMessage(response.data.error || "An error occurred"); 
       }
     } catch (error) {
       console.error("Error making POST request:", error);

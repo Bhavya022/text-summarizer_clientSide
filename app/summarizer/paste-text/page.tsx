@@ -62,8 +62,9 @@ const PasteText = () => {
         },
         body: JSON.stringify({ text: data }),
       });
-
+     console.log(response);
       const result = await response.json();
+      console.log(result)
       if (response.ok) {
         setSummarizedText(result.summary || "");
         setSentiments(result.sentiments || []);
@@ -215,7 +216,7 @@ const PasteText = () => {
         </button>
       </section>
 
-      {/* History section */}
+      {/* History section
       {history.length > 0 && (
         <section className="my-10">
           <h3 className="text-2xl font-bold mb-5 text-center">Summarization History</h3>
@@ -229,7 +230,7 @@ const PasteText = () => {
             ))}
           </div>
         </section>
-      )}
+      )} */}
     </main>
   );
 };
