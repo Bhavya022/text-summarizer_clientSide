@@ -29,7 +29,7 @@ const NavBar = () => {
 
   // Toggle sidebar
   const handleSideBar = () => {
-    setSideBar(!sideBar);
+    setSideBar(prev => !prev);
   };
 
   // Check authentication
@@ -43,15 +43,26 @@ const NavBar = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('username');
     setIsAuthenticated(false);
-    router.push('/login'); // Redirect to login page using useRouter
+    router.push('/login');
   };
+
+  // Handle keyboard events for sidebar
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSideBar(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   return (
     <div className="flex items-center justify-between">
-      <Link
-        href="/"
-        className="text-white md:text-black text-2xl md:text-4xl tracking-wide"
-      >
+      <Link href="/" className="text-white md:text-black text-2xl md:text-4xl tracking-wide">
         ai-
         <span className="txt-white md:text-azure-blue font-semibold">
           summarizer
@@ -82,20 +93,24 @@ const NavBar = () => {
         </Link>
       </div>
 
-      <div className="md:hidden" onClick={handleSideBar}>
+      <div
+        className="md:hidden"
+        onClick={handleSideBar}
+        aria-expanded={sideBar}
+        aria-controls="sidebar"
+      >
         <Hamburger />
       </div>
 
       {/* Mobile sidebar */}
       <article
         ref={sidebarRef}
-        className={`absolute top-0 ${
-          sideBar ? "left-0" : "-left-full"
-        } h-screen bg-cotton-white w-[80%] transition-all md:hidden z-10`}
+        id="sidebar"
+        className={`absolute top-0 ${sideBar ? "left-0" : "-left-full"} h-screen bg-cotton-white w-[80%] transition-all md:hidden z-10`}
       >
         <span
           onClick={() => setSideBar(false)}
-          className="absolute right-5 top-5"
+          className="absolute right-5 top-5 cursor-pointer"
         >
           <Cancel />
         </span>
@@ -114,7 +129,7 @@ const NavBar = () => {
 
           <Link onClick={() => setSideBar(false)} href="/contact-us">
             <button
-              className={`bg-azure-blue text-cotton-white hover:text-cotton-white px-6 py-3 rounded-md hover:bg-opacity-80 transition-all font-[550] mx-auto`}
+              className="bg-azure-blue text-cotton-white hover:text-cotton-white px-6 py-3 rounded-md hover:bg-opacity-80 transition-all font-[550] mx-auto"
             >
               Contact Us
             </button>
