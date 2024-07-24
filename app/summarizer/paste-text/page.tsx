@@ -18,25 +18,7 @@ const PasteText = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [errorLength, setErrorLength] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
-  const [history, setHistory] = useState<Array<{ text: string; summary: string; date: Date }>>([]);
   const router = useRouter();
-
-  // Fetch and display summarization history from localStorage
-  const fetchSummarizationHistory = () => {
-    const history = JSON.parse(localStorage.getItem("summarizationHistory") || "[]");
-    setHistory(history);
-  };
-
-  useEffect(() => {
-    fetchSummarizationHistory();
-  }, []);
-
-  const saveToHistory = (newEntry: { text: string; summary: string; date: Date }) => {
-    const history = JSON.parse(localStorage.getItem("summarizationHistory") || "[]");
-    history.push(newEntry);
-    localStorage.setItem("summarizationHistory", JSON.stringify(history));
-    fetchSummarizationHistory(); // Refresh history after saving
-  };
 
   // Function to summarize and analyze text
   const handleSummarize = async () => {
@@ -62,7 +44,7 @@ const PasteText = () => {
         },
         body: JSON.stringify({ text: data }),
       });
-     console.log(response);
+      console.log(response);
       const result = await response.json();
       console.log(result)
       if (response.ok) {
@@ -72,10 +54,6 @@ const PasteText = () => {
         setParaphrase(result.paraphrase || "");
         setRequestPath(result.requestpath || "");
         setErrorMessage("");
-
-        // Save to history
-        const newEntry = { text: data, summary: result.summary, date: new Date() };
-        saveToHistory(newEntry);
       } else {
         setErrorMessage(result.error || "An error occurred");
       }
@@ -94,6 +72,16 @@ const PasteText = () => {
       setErrorMessage("Unable to perform text-to-speech.");
     }
   };
+
+  useEffect(() => {
+    // Clear the summary fields when data is changed
+    setSummarizedText("");
+    setSentiments([]);
+    setClassifications([]);
+    setParaphrase("");
+    setRequestPath("");
+    setErrorMessage("");
+  }, [data]);
 
   return (
     <main>
@@ -215,22 +203,6 @@ const PasteText = () => {
           {loading ? "Summarizing..." : "Summarize"}
         </button>
       </section>
-
-      {/* History section
-      {history.length > 0 && (
-        <section className="my-10">
-          <h3 className="text-2xl font-bold mb-5 text-center">Summarization History</h3>
-          <div className="w-[90%] mx-auto">
-            {history.map((entry, index) => (
-              <div key={index} className="border-b border-gray-300 py-3">
-                <p className="text-lg font-semibold">{entry.text}</p>
-                <p className="text-sm text-gray-600">{new Date(entry.date).toLocaleString()}</p>
-                <p className="text-md mt-2">{entry.summary}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-      )} */}
     </main>
   );
 };
