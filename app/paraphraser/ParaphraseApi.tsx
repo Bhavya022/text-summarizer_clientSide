@@ -19,7 +19,7 @@ const ParaphraseApi = () => {
     // Make the POST request
     axios
       .post(
-        "http://localhost:8000/api/paraphrase",
+        "https://ai-summarization-backend1.onrender.com/api/paraphrase",
         JSON.stringify(apiData),
         { headers }
       )
