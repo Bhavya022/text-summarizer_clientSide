@@ -51,7 +51,6 @@ const Upload = () => {
         );
 
         if (res.status === 200) { 
-          console.log(res);
           const data = res.data;
           setFileUrl(data.reportPath);
           setSummary(data.summary);
@@ -65,7 +64,7 @@ const Upload = () => {
           setErrorMessage('Unexpected response from server.');
         }
       } catch (err) {
-        console.error('Error:', err);
+        console.error('Error uploading file:', err);
         setErrorMessage('Error uploading file. Please try again.');
       } finally {
         setFileLoading(false);
@@ -109,28 +108,18 @@ const Upload = () => {
           {errorMessage && (
             <p className="text-red-500 text-center mt-4">{errorMessage}</p>
           )}
-          {/* <button
-            onClick={() => document.querySelector('input[type="file"]')?.click()}
+          <button
+            onClick={() => {
+              const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement | null;
+              fileInput?.click();
+            }}
             disabled={fileLoading}
             className={`${
               fileLoading ? "opacity-50" : ""
             } bg-cotton-white md:bg-azure-blue text-azure-blue md:text-cotton-white hover:text-cotton-white md:hover:text-azure-blue px-6 py-3 rounded-md border border-azure-blue hover:bg-azure-blue md:hover:bg-transparent transition-all font-[550] mx-auto`}
           >
             {fileLoading ? "Uploading..." : "Upload File"}
-          </button> */}
-          <button
-  onClick={() => {
-    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement | null;
-    fileInput?.click();
-  }}
-  disabled={fileLoading}
-  className={`${
-    fileLoading ? "opacity-50" : ""
-  } bg-cotton-white md:bg-azure-blue text-azure-blue md:text-cotton-white hover:text-cotton-white md:hover:text-azure-blue px-6 py-3 rounded-md border border-azure-blue hover:bg-azure-blue md:hover:bg-transparent transition-all font-[550] mx-auto`}
->
-  {fileLoading ? "Uploading..." : "Upload File"}
-</button>
-
+          </button>
 
           {/* Display summary */}
           {summary && (
@@ -169,10 +158,11 @@ const Upload = () => {
               </div>
             </div>
           )}
-         {/* Display keyword */}
-         {keyword.length > 0 && (
+
+          {/* Display keyword */}
+          {keyword.length > 0 && (
             <div className="mt-5">
-              <h3 className="text-xl font-bold mb-2">Keyword:</h3>
+              <h3 className="text-xl font-bold mb-2">Keywords:</h3>
               <div className="p-4 border border-azure-blue rounded-md bg-gray-50">
                 <ul className="list-disc pl-5">
                   {keyword.map((keyword, index) => (
